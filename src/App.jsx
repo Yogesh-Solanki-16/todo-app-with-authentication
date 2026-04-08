@@ -1,18 +1,15 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Products from './pages/Products';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
-  const { token } = useSelector((state) => state.auth);
-
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={token ? <Navigate to="/products" /> : <Login />} />
-        <Route path="/register" element={token ? <Navigate to="/products" /> : <Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route
           path="/products"
           element={
@@ -21,7 +18,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/" element={<Navigate to={token ? "/products" : "/login"} />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
