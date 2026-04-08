@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser } from "../store/slices/authSlice";
-import { Link, Navigate } from "react-router-dom";
+import { loginUser, clearError } from "../store/slices/authSlice";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [credentials, setCredentials] = useState({
@@ -11,16 +11,45 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { token, loading, error } = useSelector((state) => state.auth);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    dispatch(loginUser(credentials));
+    dispatch(clearError());
+    
+    try {
+      const result = await dispatch(loginUser(credentials)).unwrap();
+      // console.log('Login successful:', result);
+      
+      // Redirect after successful login
+      const redirectPath = location.state?.from || "/products";
+      navigate(redirectPath, { replace: true });
+    } catch (err) {
+      // console.log('Login failed:', err);
+      // Error is handled by Redux state
+    }
   };
 
-  // If already logged in, redirect to products
+  // If already logged in, redirect immediately
+  useEffect(() => {
+    if (token) {
+      const redirectPath = location.state?.from || "/products";
+      navigate(redirectPath, { replace: true });
+    }
+  }, [token, location.state, navigate]);
+
+  // Clear error when user starts typing
+  useEffect(() => {
+    if (error) {
+      dispatch(clearError());
+    }
+  }, [credentials.username, credentials.password, error, dispatch]);
+
+  // Redirect if already logged in (fallback)
   if (token) {
-    return <Navigate to="/products" replace />;
+    return <Navigate to={location.state?.from || "/products"} replace />;
   }
 
   return (
